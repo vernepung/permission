@@ -12,23 +12,19 @@
 
 /**
  当前是否有推送权限(只读取,不请求)
-
+ 
  @param complete 是否允许推送
  */
 + (void)checkingNotificationPermisssionWithCompleteBlock:(void(^)(BOOL result))complete;
 /**
  检查相机权限
-
- @return 是否允许使用相机
  */
-+ (BOOL)checkingVideoPermission;
++ (void)checkingVideoPermissionWithCompleteBlock:(void(^)(BOOL success))complete;
 
 /**
  检查相册权限
-
- @return 是否允许使用相册
  */
-+ (BOOL)checkingPhotoPermission;
++ (void)checkingPhotoPermissionWithCompleteBlock:(void(^)(BOOL success))complete;
 
 /**
  打开当前App的权限设置界面

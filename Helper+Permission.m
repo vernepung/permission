@@ -26,59 +26,55 @@
     }
 }
 
-+ (BOOL)checkingPhotoPermission {
-    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    __block BOOL allowed = YES;
++ (void)checkingPhotoPermissionWithCompleteBlock:(void(^)(BOOL success))complete {
     PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
     switch (status) {
         case PHAuthorizationStatusNotDetermined:
+        {
             [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
                 if (status != PHAuthorizationStatusAuthorized) {
-                    allowed = NO;
+                    ExecBlock(complete, NO);
                     DLog(@"%@",@"user denied photo permission");
+                }else{
+                    ExecBlock(complete, YES);
                 }
             }];
-            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+        }
             break;
         case PHAuthorizationStatusAuthorized:
-            
+            ExecBlock(complete, YES);
             break;
         case PHAuthorizationStatusRestricted:
         case PHAuthorizationStatusDenied:
-            allowed = NO;
+            ExecBlock(complete, NO);
             break;
     }
-    return allowed;
 }
 
-+ (BOOL)checkingVideoPermission {
-    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    __block BOOL allowed = YES;
++ (void)checkingVideoPermissionWithCompleteBlock:(void(^)(BOOL success))complete {
     AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
     switch (status) {
         case AVAuthorizationStatusNotDetermined:{
             // 许可对话没有出现，发起授权许可
             [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
-                dispatch_semaphore_signal(sem);
-                allowed = granted;
+                ExecBlock(complete, granted);
                 if (!granted) {
                     DLog(@"%@",@"user denied video permission");
                 }
             }];
-            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
             break;
         }
         case AVAuthorizationStatusAuthorized:{
+            ExecBlock(complete, YES);
             // 已经开启授权，可继续
             break;
         }
         case AVAuthorizationStatusDenied:
         case AVAuthorizationStatusRestricted:
             // 用户明确地拒绝授权，或者相机设备无法访问
-            allowed = NO;
+            ExecBlock(complete, NO);
             break;
     }
-    return allowed;
 }
 
 + (void)openAuthorizatioinSetting {
